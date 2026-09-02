@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#111827">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="stylesheet" href="src/app.css">
+    <title>SoundBookDock</title>
+  </head>
+  <body>
+    <main class="app">
+      <header><div><p class="eyebrow">LOCAL-FIRST AUDIO</p><h1>SoundBookDock</h1></div><button id="install" hidden>Instalovat</button></header>
+      <section class="hero"><div><p class="eyebrow">Tvoje knihovna</p><h2>Hudba, audioknihy a podcasty.</h2><p>Soukromě v zařízení, bez databázového serveru.</p></div><label class="import"><input id="file-input" type="file" accept="audio/*,.flac,.m4b" multiple>+ Přidat soubory</label></section>
+      <nav class="tabs"><button class="tab active" data-view="library">Knihovna</button><button class="tab" data-view="playlists">Playlisty</button><button class="tab" data-view="settings">Nastavení</button></nav>
+      <section id="library" class="view"><div class="toolbar"><input id="search" type="search" placeholder="Hledat ve knihovně…"><span id="count"></span></div><div id="tracks" class="track-list"></div></section>
+      <section id="playlists" class="view" hidden><div class="toolbar"><h2>Playlisty</h2><button id="new-playlist">+ Nový playlist</button></div><div id="playlist-list"></div></section>
+      <section id="settings" class="view" hidden><div class="settings"><h2>Nastavení přehrávače</h2><label>Časovač vypnutí <select id="sleep"><option value="0">Vypnuto</option><option value="15">15 minut</option><option value="30">30 minut</option><option value="60">60 minut</option></select></label><p class="muted">Offline cache a cloudové zdroje budou přidány přes IndexedDB adaptéry v další fázi.</p></div></section>
+      <footer id="player"><div class="now"><div id="art">♪</div><div><strong id="now-title">Nic se nepřehrává</strong><small id="now-source">Vyber skladbu</small></div></div><div class="controls"><button id="prev" aria-label="Předchozí">↶</button><button id="play" class="play" aria-label="Přehrát">▶</button><button id="next" aria-label="Další">↷</button></div><div class="progress"><span id="elapsed">0:00</span><input id="seek" type="range" min="0" max="100" value="0"><span id="duration">0:00</span></div><audio id="audio" preload="metadata"></audio></footer>
+    </main>
+    <script type="module" src="src/app.js"></script>
+  </body>
+</html>
