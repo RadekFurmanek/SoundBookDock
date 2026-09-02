@@ -1,43 +1,60 @@
-# SoundBookDock – initial architecture
+# SoundBookDock — architecture, specification and delivery plan
 
-## Product direction
+## Product
 
-SoundBookDock is a local-first progressive web application packaged for mobile
-when needed. The browser is the UI and playback runtime; there is no
-application server or remote database.
+SoundBookDock is a local-first, installable web application for music,
+audiobooks and podcasts. The same responsive UI works on a phone, tablet and
+desktop and can be packaged with a WebView. There is no application server or
+remote database: the browser stores the catalog, preferences, playback state
+and offline files on the device.
 
-## Layers
+## Architecture
 
-- **UI shell**: responsive web UI and installable PWA shell. It owns navigation,
-  accessibility, and media controls.
-- **Application services**: coordinate library scanning, source authentication,
-  streaming, cache/offline jobs, and playback commands.
-- **Domain**: source-independent models and rules for tracks, playlists,
-  playback state, resume positions, shuffle, repeat, and sleep timers.
-- **Adapters**: IndexedDB for the catalog, settings, cache metadata, and resume
-  state; the browser Media Session and Web Audio APIs for playback; source
-  adapters for local files, Google Drive, Nextcloud, SMB, and FTP/SFTP.
+```text
+UI (responsive PWA)
+  └─ application services (library, queue, cache, source accounts)
+      └─ domain (Track, Playlist, PlaybackSession, resume and timers)
+          └─ adapters (File System Access, IndexedDB, Cache Storage, Media Session)
+```
 
-## Storage and privacy
+The source adapter contract is `list()` plus `open(track)` returning a
+browser-readable `Blob` or URL. A local-file adapter is available first.
+Google Drive, Nextcloud, SMB and FTP/SFTP require user-configured credentials
+and a browser-compatible HTTPS/CORS gateway or native wrapper; browsers cannot
+connect directly to SMB/SFTP safely. Adapters must never send credentials to a
+SoundBookDock server.
 
-All metadata, credentials/tokens, settings, and playback state stay on the
-device. IndexedDB is the primary database and the Cache Storage API holds
-offline media. Credentials are supplied by the user and should be encrypted
-using a device-protected key where the target platform supports it.
+IndexedDB is the production persistence boundary (library, playlists, resume
+positions, settings and cache metadata). Cache Storage contains media selected
+for offline use. The current demo uses localStorage and object URLs so it works
+without a build server; replacing that adapter does not change the domain API.
+Media Session supplies lock-screen controls, while the HTML media element owns
+audio playback. A service worker caches only the app shell.
 
-## Playback constraints
+## Functional specification
 
-Playback uses one HTML media element initially, with HTTP range requests and a
-bounded local cache. Media Session actions provide lock-screen controls. The
-sleep timer is persisted and evaluated while the app is backgrounded; a
-service worker is used for cache access and app-shell availability, not for
-owning long-running audio playback.
+- Import local audio by file picker or drag and drop; accept MP3, FLAC, AAC,
+  M4A, OGG, OPUS, WAV, ALAC and M4B where the platform codec supports it.
+- Show one searchable library with title, type, duration and source.
+- Play, pause, stop, seek, next, previous, shuffle and repeat (off/track/queue).
+- Keep an independent queue and resume position for every playlist.
+- Create and manage manual playlists.
+- Configure a sleep timer that survives navigation and stops playback when due.
+- Install as a PWA and keep the app shell available offline.
+- Expose an offline/cache boundary for future cloud downloads.
+- Provide audiobook/podcast metadata fields and chapter support in the next
+  adapter iteration; loudness normalization and Web Audio equalizer presets
+  follow once a real audio graph is added.
 
-## Delivery phases
+## Delivery plan
 
-1. Establish the domain model and tests for playback and resume persistence.
-2. Add the IndexedDB repository and a local-file source adapter.
-3. Add the PWA shell, Media Session integration, and offline cache controls.
-4. Add cloud/SMB/FTP adapters behind the same source interface.
-5. Add audiobooks, podcasts, equalizer presets, loudness normalization, and
-   polished mobile/desktop UI.
+1. **Foundation (implemented)**: domain tests, local import, responsive player,
+   playlists, persistence, Media Session and service worker.
+2. **Storage**: IndexedDB repositories, cache-size accounting, quota warnings,
+   offline album/playlist jobs and restart-safe migrations.
+3. **Sources**: File System Access/NAS selection, OAuth Drive, Nextcloud
+   WebDAV, and native-wrapper SMB/SFTP adapters with retry/range streaming.
+4. **Media features**: audiobook chapters, podcast feeds, speed control,
+   loudness normalization, equalizer presets and gapless playback.
+5. **Release quality**: accessibility audit, encrypted platform credentials,
+   background/offline integration tests, packaging and performance budgets.
